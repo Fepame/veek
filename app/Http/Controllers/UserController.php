@@ -23,14 +23,33 @@ class UserController extends Controller
 
 	public function store(Request $request)
 	{
+
+        $validator = \Validator::make($request->all(), [
+            'name' => 'max:30',
+            'email' => 'max:50|email',
+        ]);
+
+        if($validator->fails()) {
+            return response()->json([
+                'message'   => 'Validation Failed',
+                'errors'    => $validator->errors()->all()
+            ], 422);
+        }
+
 		$user = $this->userRepo->create($request->all());
         return response()->json($user, 201);
 	}
 
 	public function update(Request $request, $id)
 	{
-		$user = $this->userRepo->update($request->all(), $id);
-        return response()->json($user, 200);
+		try {
+			$user = $this->userRepo->update($request->all(), $id);
+	        return response()->json($user, 200);
+		} catch(\Exception $e) {
+			return response()->json([
+                'message'   => 'Record not found',
+            ], 404); 
+		}
 	}
 
 	public function delete($id)
